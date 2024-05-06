@@ -6,7 +6,8 @@ const double sidePadding = 28;
 const double middlePadding = 28;
 
 class BmiCalculatorPage extends StatelessWidget {
-  const BmiCalculatorPage({super.key});
+  final Function() callback;
+  const BmiCalculatorPage(this.callback, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +37,7 @@ class BmiCalculatorPage extends StatelessWidget {
                 Theme.of(context).colorScheme.secondary,
               ),
             ),
-            onPressed: () {},
+            onPressed: callback,
             child: Container(
               width: double.infinity,
               alignment: Alignment.center,
@@ -117,10 +118,7 @@ class SexSelector extends StatelessWidget {
           children: [
             Text(
               word[0],
-              style: const TextStyle(
-                fontSize: 60,
-                fontWeight: FontWeight.w900,
-              ),
+              style: Theme.of(context).textTheme.displayMedium,
             ),
             Text(word),
           ],
@@ -153,10 +151,7 @@ class _HeightSelectorState extends State<HeightSelector> {
               children: [
                 TextSpan(
                   text: sliderValue.toStringAsFixed(0),
-                  style: const TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: Theme.of(context).textTheme.displaySmall,
                 ),
                 const TextSpan(
                   text: "cm",
@@ -182,23 +177,51 @@ class _HeightSelectorState extends State<HeightSelector> {
   }
 }
 
-class WeightSelector extends StatelessWidget {
+class WeightSelector extends StatefulWidget {
   const WeightSelector({super.key});
 
   @override
+  State<WeightSelector> createState() => _WeightSelectorState();
+}
+
+class _WeightSelectorState extends State<WeightSelector> {
+  int specialIndex = 0;
+  @override
   Widget build(BuildContext context) {
+    final height =
+        (MediaQuery.of(context).size.width - sidePadding * 2 - middlePadding) /
+            2;
     return Square(
-      height: (MediaQuery.of(context).size.width -
-              sidePadding * 2 -
-              middlePadding) /
-          2,
+      height: height,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            "WEIGHT",
+          const SizedBox(height: 10),
+          const Text("WEIGHT"),
+          Expanded(
+            child: ListWheelScrollView.useDelegate(
+              diameterRatio: 0.9,
+              itemExtent: height / 3.5,
+              squeeze: 1.4,
+              perspective: 0.009,
+              onSelectedItemChanged: (index) {
+                setState(() {
+                  specialIndex = index;
+                });
+              },
+              childDelegate: ListWheelChildBuilderDelegate(
+                childCount: 200 - 35,
+                builder: (context, index) => Text(
+                  (index + 35).toString(),
+                  style: TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    color: index == specialIndex ? Colors.white : Colors.grey,
+                  ),
+                ),
+              ),
+            ),
           ),
-          Text("Picker"),
         ],
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:bmi_demo/bmi_calculator_page.dart';
 import 'package:bmi_demo/result_page.dart';
@@ -31,28 +32,30 @@ class MainApp extends StatelessWidget {
           error: Colors.red,
           onError: Colors.white,
         ),
-        // textTheme: GoogleFonts.interTextTheme(
-        //   Theme.of(context).textTheme,
-        // ),
+        fontFamily: GoogleFonts.inter().fontFamily,
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xff15192E),
           centerTitle: true,
         ),
         navigationBarTheme: const NavigationBarThemeData(
-          backgroundColor: Color(0xff1D2136),
-          indicatorColor: Colors.white,
+          backgroundColor: Color(0xff15192E),
+          indicatorColor: Color(0xff1D2136),
+        ),
+        textTheme: const TextTheme(
+          displayMedium: TextStyle(
+            fontSize: 60,
+            fontWeight: FontWeight.w900,
+          ),
+          displaySmall: TextStyle(
+            fontSize: 40,
+            fontWeight: FontWeight.w900,
+          ),
         ),
       ),
       home: const MainScreen(),
     );
   }
 }
-
-final pages = {
-  "BMI calculator": const BmiCalculatorPage(),
-  "Weight": const WeightPage(),
-  "Result": const ResultPage(),
-};
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -63,30 +66,53 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int currentPageIndex = 0;
+  String currectPageLabel = "BMI calculator";
 
   @override
   Widget build(BuildContext context) {
+    final pages = {
+      "BMI calculator": BmiCalculatorPage(() {
+        setState(() {
+          currectPageLabel = "Result";
+        });
+      }),
+      "Weight": const WeightPage(),
+      "Result": const ResultPage(),
+    };
     return Scaffold(
       appBar: AppBar(
         title: Text(pages.keys.toList()[currentPageIndex]),
       ),
-      body: pages[pages.keys.toList()[currentPageIndex]],
+      body: pages[currectPageLabel],
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (int index) {
           setState(() {
             currentPageIndex = index;
+            currectPageLabel = pages.keys.toList()[index];
           });
         },
         selectedIndex: currentPageIndex,
-        destinations: const <Widget>[
+        destinations: <Widget>[
           NavigationDestination(
-            selectedIcon: Icon(Icons.calculate),
-            icon: Icon(Icons.calculate_outlined),
+            selectedIcon: SvgPicture.asset(
+              "assets/calculator_icon.svg",
+              colorFilter: const ColorFilter.mode(
+                Color(0xff79BC99),
+                BlendMode.srcIn,
+              ),
+            ),
+            icon: SvgPicture.asset("assets/calculator_icon.svg"),
             label: '',
           ),
           NavigationDestination(
-            selectedIcon: Icon(Icons.bar_chart),
-            icon: Icon(Icons.bar_chart_outlined),
+            selectedIcon: SvgPicture.asset(
+              "assets/stats_icon.svg",
+              colorFilter: const ColorFilter.mode(
+                Color(0xff79BC99),
+                BlendMode.srcIn,
+              ),
+            ),
+            icon: SvgPicture.asset("assets/stats_icon.svg"),
             label: '',
           ),
         ],
