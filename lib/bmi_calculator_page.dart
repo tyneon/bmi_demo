@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:bmi_demo/bmi_settings_provider.dart';
 
 import 'package:bmi_demo/rectangles.dart';
 
@@ -43,7 +46,10 @@ class BmiCalculatorPage extends StatelessWidget {
               alignment: Alignment.center,
               child: const Text(
                 "CALCULATE",
-                style: TextStyle(fontSize: 20),
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -53,17 +59,12 @@ class BmiCalculatorPage extends StatelessWidget {
   }
 }
 
-class SexSelectors extends StatefulWidget {
+class SexSelectors extends ConsumerWidget {
   const SexSelectors({super.key});
 
   @override
-  State<SexSelectors> createState() => _SexSelectorsState();
-}
-
-class _SexSelectorsState extends State<SexSelectors> {
-  bool isMale = true;
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isMale = ref.watch(bmiSettingsProvider).isMale;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -71,18 +72,14 @@ class _SexSelectorsState extends State<SexSelectors> {
           "Male",
           isSelected: isMale,
           callback: () {
-            setState(() {
-              isMale = true;
-            });
+            ref.read(bmiSettingsProvider.notifier).setIsMale(true);
           },
         ),
         SexSelector(
           "Female",
           isSelected: !isMale,
           callback: () {
-            setState(() {
-              isMale = false;
-            });
+            ref.read(bmiSettingsProvider.notifier).setIsMale(false);
           },
         ),
       ],
@@ -128,19 +125,14 @@ class SexSelector extends StatelessWidget {
   }
 }
 
-class HeightSelector extends StatefulWidget {
+class HeightSelector extends ConsumerWidget {
   const HeightSelector({super.key});
 
-  @override
-  State<HeightSelector> createState() => _HeightSelectorState();
-}
-
-class _HeightSelectorState extends State<HeightSelector> {
   static const int minValue = 110;
   static int maxValue = 230;
-  double sliderValue = 180;
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    double sliderValue = ref.watch(bmiSettingsProvider).height;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 20),
       child: Column(
@@ -166,9 +158,7 @@ class _HeightSelectorState extends State<HeightSelector> {
             divisions: maxValue - minValue,
             label: sliderValue.round().toString(),
             onChanged: (double value) {
-              setState(() {
-                sliderValue = value;
-              });
+              ref.read(bmiSettingsProvider.notifier).setHeight(value);
             },
           ),
         ],
@@ -177,17 +167,12 @@ class _HeightSelectorState extends State<HeightSelector> {
   }
 }
 
-class WeightSelector extends StatefulWidget {
+class WeightSelector extends ConsumerWidget {
   const WeightSelector({super.key});
 
   @override
-  State<WeightSelector> createState() => _WeightSelectorState();
-}
-
-class _WeightSelectorState extends State<WeightSelector> {
-  int specialIndex = 0;
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final weight = ref.watch(bmiSettingsProvider).weight;
     final height =
         (MediaQuery.of(context).size.width - sidePadding * 2 - middlePadding) /
             2;
@@ -199,27 +184,14 @@ class _WeightSelectorState extends State<WeightSelector> {
           const SizedBox(height: 10),
           const Text("WEIGHT"),
           Expanded(
-            child: ListWheelScrollView.useDelegate(
-              diameterRatio: 0.9,
-              itemExtent: height / 3.5,
-              squeeze: 1.4,
-              perspective: 0.009,
-              onSelectedItemChanged: (index) {
-                setState(() {
-                  specialIndex = index;
-                });
+            child: WheelSelector(
+              height: height,
+              initialValue: weight,
+              startValue: 35,
+              endValue: 200,
+              newValueCallback: (double value) {
+                ref.read(bmiSettingsProvider.notifier).setWeight(value);
               },
-              childDelegate: ListWheelChildBuilderDelegate(
-                childCount: 200 - 35,
-                builder: (context, index) => Text(
-                  (index + 35).toString(),
-                  style: TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    color: index == specialIndex ? Colors.white : Colors.grey,
-                  ),
-                ),
-              ),
             ),
           ),
         ],
@@ -228,11 +200,15 @@ class _WeightSelectorState extends State<WeightSelector> {
   }
 }
 
-class AgeSelector extends StatelessWidget {
+class AgeSelector extends ConsumerWidget {
   const AgeSelector({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final age = ref.watch(bmiSettingsProvider).age;
+    final height =
+        (MediaQuery.of(context).size.width - sidePadding * 2 - middlePadding) /
+            2;
     return Square(
       height: (MediaQuery.of(context).size.width -
               sidePadding * 2 -
@@ -241,11 +217,96 @@ class AgeSelector extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            "AGE",
+          const SizedBox(height: 10),
+          const Text("AGE"),
+          Expanded(
+            child: WheelSelector(
+              height: height,
+              startValue: 16,
+              endValue: 115,
+              initialValue: age,
+              newValueCallback: (double value) {
+                ref.read(bmiSettingsProvider.notifier).setAge(value);
+              },
+            ),
           ),
-          Text("Picker"),
         ],
+      ),
+    );
+  }
+}
+
+class WheelSelector extends StatefulWidget {
+  final double initialValue;
+  final double height;
+  final double startValue;
+  final double endValue;
+  final double step;
+  final int precision;
+  final Function(double value) newValueCallback;
+  const WheelSelector({
+    required this.height,
+    required this.startValue,
+    required this.endValue,
+    required this.initialValue,
+    this.step = 1,
+    this.precision = 0,
+    required this.newValueCallback,
+    super.key,
+  });
+
+  @override
+  State<WheelSelector> createState() => _WheelSelectorState();
+}
+
+class _WheelSelectorState extends State<WheelSelector> {
+  int selectedIndex = 0;
+  late int itemCount;
+  late ScrollController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    itemCount =
+        ((widget.endValue - widget.startValue) / widget.step).floor().toInt() +
+            1;
+    selectedIndex = ((widget.initialValue - widget.startValue) / widget.step)
+        .floor()
+        .toInt();
+    controller = ScrollController(
+        initialScrollOffset: widget.height / 3.5 * selectedIndex);
+    controller.addListener(() {
+      final index = ((controller.offset * itemCount) /
+              controller.position.maxScrollExtent)
+          .floor()
+          .toInt();
+      if (index != selectedIndex) {
+        selectedIndex = index;
+        widget
+            .newValueCallback(widget.startValue + widget.step * selectedIndex);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListWheelScrollView.useDelegate(
+      controller: controller,
+      diameterRatio: 0.9,
+      itemExtent: widget.height / 3.5,
+      squeeze: 1.4,
+      perspective: 0.009,
+      childDelegate: ListWheelChildBuilderDelegate(
+        childCount: itemCount,
+        builder: (context, index) => Text(
+          (widget.startValue + index * widget.step)
+              .toStringAsFixed(widget.precision),
+          style: TextStyle(
+            fontSize: 40,
+            fontWeight: FontWeight.bold,
+            // color: index == selectedIndex ? Colors.white : Colors.grey,
+          ),
+        ),
       ),
     );
   }

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:bmi_demo/bmi_calculator_page.dart';
 import 'package:bmi_demo/result_page.dart';
 import 'package:bmi_demo/weight_page.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const ProviderScope(child: MainApp()));
 }
 
 class MainApp extends StatelessWidget {
@@ -77,7 +78,11 @@ class _MainScreenState extends State<MainScreen> {
         });
       }),
       "Weight": const WeightPage(),
-      "Result": const ResultPage(),
+      "Result": ResultPage(() {
+        setState(() {
+          currectPageLabel = "BMI calculator";
+        });
+      }),
     };
     return Scaffold(
       appBar: AppBar(
